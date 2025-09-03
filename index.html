@@ -60,6 +60,7 @@
         <nav class="flex justify-center border-b mb-8">
             <button id="nav-framework" class="py-4 px-6 text-lg nav-active">Framework</button>
             <button id="nav-backlog" class="py-4 px-6 text-lg text-gray-500">Backlog</button>
+            <button id="nav-import" class="py-4 px-6 text-lg text-gray-500">Import from Google Sheet</button>
         </nav>
 
         <main id="framework-view">
@@ -126,6 +127,19 @@
                                 <label for="featureName" class="font-semibold text-gray-700">Feature Name</label>
                                 <input type="text" id="featureName" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Enter a descriptive name">
                             </div>
+                            <div>
+                                <label for="requestingTeam" class="font-semibold text-gray-700">Requesting Team</label>
+                                <select id="requestingTeam" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                                    <option>Enterprise</option>
+                                    <option>QTG Sales</option>
+                                    <option>QTG CSS</option>
+                                    <option>QTG Marketing</option>
+                                    <option>CTC Pre-funding</option>
+                                    <option>CTC Post-funding</option>
+                                    <option>QTG Engineering</option>
+                                    <option>Others</option>
+                                </select>
+                            </div>
                         </form>
                     </div>
                      <div class="w-full lg:w-1/2 bg-gray-50 rounded-lg p-6 flex flex-col items-center justify-center">
@@ -144,16 +158,22 @@
         
         <main id="backlog-view" class="hidden">
             <section id="backlog-table" class="bg-white rounded-lg shadow-md p-6 md:p-8">
-                <h2 class="text-3xl font-bold text-center mb-2">Feature Backlog</h2>
-                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
-                    This is your prioritized list of features. The items with the highest score are at the top, representing the most valuable work for the effort involved.
-                </p>
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                    <div class="mb-4 sm:mb-0 text-center sm:text-left">
+                        <h2 class="text-3xl font-bold">Feature Backlog</h2>
+                        <p class="text-gray-600">Your prioritized list of features.</p>
+                    </div>
+                    <button id="export-csv-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors self-center sm:self-auto hidden">
+                        Export to CSV
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="border-b bg-gray-50">
                                 <th class="p-3 font-semibold">Priority Score</th>
                                 <th class="p-3 font-semibold">Feature Name</th>
+                                <th class="p-3 font-semibold">Requesting Team</th>
                                 <th class="p-3 font-semibold">Value</th>
                                 <th class="p-3 font-semibold">Effort</th>
                                 <th class="p-3 font-semibold">Actions</th>
@@ -166,6 +186,47 @@
                  <div id="empty-backlog-message" class="text-center py-12 text-gray-500 hidden">
                     <h3 class="text-xl font-semibold">Your backlog is empty.</h3>
                     <p>Go to the "Framework" tab to score a feature and save it here.</p>
+                </div>
+            </section>
+        </main>
+
+        <main id="import-view" class="hidden">
+            <section id="import-section" class="bg-white rounded-lg shadow-md p-6 md:p-8">
+                <h2 class="text-3xl font-bold text-center mb-2">Import from Google Sheet</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    Bulk-add features by linking a public Google Sheet. The tool will calculate scores for all rows and allow you to add them to your backlog in one click.
+                </p>
+                
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-semibold mb-4">Instructions</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>Create a Google Sheet with the exact column headers below (the order does not matter).</li>
+                        <li>Fill in your feature data. Values for criteria must be a number from 0-4. Values for effort must be a T-shirt size (Y, XS, S, M, L, XL).</li>
+                        <li>Click <strong>File > Share > Publish to the web</strong>.</li>
+                        <li>In the dialog, select "Entire Document" and "Comma-separated values (.csv)". Click "Publish".</li>
+                        <li>Copy the generated link and paste it into the input field below.</li>
+                    </ol>
+                    <div class="mt-4 p-3 bg-gray-200 rounded font-mono text-sm text-gray-800 overflow-x-auto">
+                        <strong>Required Headers:</strong> Feature Name, Requesting Team, Alignment to Enterprise OKRs, Alignment to Journey (LOB) OKRs, Alignment to Team OKRs, Alignment to SSE OKRs, Security Alignment, Compliance Alignment, Projected Monetary Benefit Range, Effort Estimation
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <input type="url" id="google-sheet-url" class="flex-grow w-full p-2 border border-gray-300 rounded-md" placeholder="Paste your published Google Sheet .csv link here">
+                    <button id="process-sheet-btn" class="w-full md:w-auto bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
+                        Process Sheet
+                    </button>
+                </div>
+
+                <div id="import-results" class="mt-8 hidden">
+                    <h3 class="text-xl font-semibold mb-4">Processing Results</h3>
+                    <div id="import-status" class="p-4 rounded-md mb-4"></div>
+                    <div id="processed-items-preview" class="max-h-96 overflow-y-auto border rounded-lg p-4"></div>
+                    <div class="text-center mt-6">
+                        <button id="add-all-to-backlog-btn" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors text-lg">
+                            Add Items to Backlog
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -185,10 +246,10 @@
             { id: 'enterprise-okrs', name: 'Alignment to Enterprise OKRs', weight: 3, description: 'Measures how strongly the feature supports the highest-level strategic goals of QFG as a whole.', table: [['4 - Very High', 'Direct & Critical: Feature is essential to achieving a top-tier enterprise Key Result. (e.g., "Launch in the European market," "Achieve FedRAMP certification").'],['3 - High', 'Significant Contributor: Feature significantly accelerates progress on an enterprise KR. (e.g., "Reduce enterprise-wide cloud spend by 10%").'],['2 - Medium', 'Indirect Support: Feature supports a broad enterprise Objective but isn\'t tied to a specific KR. (e.g., "Improve operational efficiency").'],['1 - Low', 'Loosely Aligned: Feature has a tangential connection to enterprise goals. (e.g., "Minor UI improvements for an internal tool").'],['0 - None / Unknown', 'No discernible link to any documented enterprise OKR.']]},
             { id: 'lob-okrs', name: 'Alignment to Journey (LOB) OKRs', weight: 2, description: 'Measures how well the feature supports the specific objectives of a Line of Business.', table: [['4 - Very High', 'Solves a Critical LOB Need: Directly enables a flagship LOB initiative. (e.g., "Enable real-time fraud alerts for the new mobile banking app").'],['3 - High', 'Improves Core LOB Metric: Directly impacts a key LOB metric like customer acquisition, retention, or satisfaction.'],['2 - Medium', 'Efficiency Gain: Improves an important internal LOB process.'],['1 - Low', 'Minor Enhancement: A \'nice-to-have\' feature for a specific LOB team.'],['0 - None / Unknown', 'Does not support any known LOB objectives.']]},
             { id: 'team-okrs', name: 'Alignment to Team OKRs', weight: 1, description: 'Measures alignment with the goals of the specific team requesting the feature.', table: [['4 - Very High', 'Unblocks a Key Team Dependency: The requesting team is blocked and cannot meet a primary KR without this feature.'],['3 - High', 'Major Productivity Boost: Will save significant time or resources for the requesting team.'],['2 - Medium', 'Removes Friction: Addresses a known pain point or inefficiency in the team\'s daily workflow.'],['1 - Low', 'Quality of Life Improvement: A minor improvement that makes a task slightly easier for the team.'],['0 - None / Unknown', 'Not related to the requesting team\'s documented goals.']]},
-            { id: 'sse-okrs', name: 'Alignment to SSE Team\'s OKRs', weight: 1, description: 'Measures how the request supports the SSE team\'s own internal objectives (e.g., platform stability, reducing technical debt).', table: [['4 - Very High', 'Critical to SSE Mission: Directly contributes to a primary SSE Key Result. (e.g., "Reduce critical vulnerabilities by 90%").'],['3 - High', 'Reduces Tech Debt / Improves Service: Refactors a problematic service or improves core platform health.'],['2 - Medium', 'Improves Tooling/Automation: Enhances the SSE team\'s ability to deliver value.'],['1 - Low', 'Minor Internal Refinement: A small-scale improvement to an internal SSE process.'],['0 - None / Unknown', 'Does not align with the SSE team\'s current quarterly goals.']]},
-            { id: 'security', name: 'Security Requirement', weight: 2, description: 'Measures the feature\'s importance from a security risk perspective.', table: [['4 - Very High', 'Critical Risk Mitigation: Addresses a known, severe vulnerability (e.g., P0/P1) or is required to prevent an active threat.'],['3 - High', 'Proactive Defense: Hardens a critical system against a likely attack vector or implements a key security control.'],['2 - Medium', 'Security Best Practice: Implements defense-in-depth or improves security hygiene.'],['1 - Low', 'Minor Hardening: A small improvement that reduces the attack surface slightly.'],['0 - None / Unknown', 'No direct security impact.']]},
-            { id: 'compliance', name: 'Compliance Requirement', weight: 2, description: 'Measures the necessity of the feature to meet regulatory, legal, or industry standards.', table: [['4 - Very High', 'Mandatory for Operation: Required to avoid fines, sanctions, or loss of a critical certification (e.g., PCI-DSS, SOX, GDPR).'],['3 - High', 'Audit Finding Remediation: Addresses a specific, high-priority finding from an internal or external audit.'],['2 - Medium', 'Proactive Compliance: Helps prepare for upcoming regulations or simplifies future audits.'],['1 - Low', 'Best Practice Alignment: Aligns with an industry framework (e.g., NIST, ISO 27001) but is not strictly required.'],['0 - None / Unknown', 'No direct compliance impact.']]},
-            { id: 'benefit', name: 'Net $ Benefit', weight: 1, description: 'Measures the tangible, estimated financial impact of the feature.', table: [['4 - Very High', 'Major Financial Impact: Generates significant new revenue, enables millions in cost savings, or avoids substantial financial penalties.'],['3 - High', 'Measurable ROI: Delivers a clear and significant return on investment through revenue gain or cost reduction.'],['2 - Medium', 'Efficiency Savings: Creates measurable cost savings through time saved or process automation.'],['1 - Low', 'Minor Financial Impact: Small, indirect financial benefit that is difficult to quantify precisely.'],['0 - None / Unknown', 'No discernible financial impact, or the benefit is purely qualitative.']]}
+            { id: 'sse-okrs', name: 'Alignment to SSE OKRs', weight: 1, description: 'Measures how the request supports the SSE team\'s own internal objectives (e.g., platform stability, reducing technical debt).', table: [['4 - Very High', 'Critical to SSE Mission: Directly contributes to a primary SSE Key Result. (e.g., "Reduce critical vulnerabilities by 90%").'],['3 - High', 'Reduces Tech Debt / Improves Service: Refactors a problematic service or improves core platform health.'],['2 - Medium', 'Improves Tooling/Automation: Enhances the SSE team\'s ability to deliver value.'],['1 - Low', 'Minor Internal Refinement: A small-scale improvement to an internal SSE process.'],['0 - None / Unknown', 'Does not align with the SSE team\'s current quarterly goals.']]},
+            { id: 'security', name: 'Security Alignment', weight: 2, description: 'Measures the feature\'s importance from a security risk perspective.', table: [['4 - Very High', 'Critical Risk Mitigation: Addresses a known, severe vulnerability (e.g., P0/P1) or is required to prevent an active threat.'],['3 - High', 'Proactive Defense: Hardens a critical system against a likely attack vector or implements a key security control.'],['2 - Medium', 'Security Best Practice: Implements defense-in-depth or improves security hygiene.'],['1 - Low', 'Minor Hardening: A small improvement that reduces the attack surface slightly.'],['0 - None / Unknown', 'No direct security impact.']]},
+            { id: 'compliance', name: 'Compliance Alignment', weight: 2, description: 'Measures the necessity of the feature to meet regulatory, legal, or industry standards.', table: [['4 - Very High', 'Mandatory for Operation: Required to avoid fines, sanctions, or loss of a critical certification (e.g., PCI-DSS, SOX, GDPR).'],['3 - High', 'Audit Finding Remediation: Addresses a specific, high-priority finding from an internal or external audit.'],['2 - Medium', 'Proactive Compliance: Helps prepare for upcoming regulations or simplifies future audits.'],['1 - Low', 'Best Practice Alignment: Aligns with an industry framework (e.g., NIST, ISO 27001) but is not strictly required.'],['0 - None / Unknown', 'No direct compliance impact.']]},
+            { id: 'benefit', name: 'Projected Monetary Benefit Range', weight: 1, description: 'Measures the tangible, estimated financial impact of the feature.', table: [['4 - Very High', 'Major Financial Impact: Generates significant new revenue, enables millions in cost savings, or avoids substantial financial penalties.'],['3 - High', 'Measurable ROI: Delivers a clear and significant return on investment through revenue gain or cost reduction.'],['2 - Medium', 'Efficiency Savings: Creates measurable cost savings through time saved or process automation.'],['1 - Low', 'Minor Financial Impact: Small, indirect financial benefit that is difficult to quantify precisely.'],['0 - None / Unknown', 'No discernible financial impact, or the benefit is purely qualitative.']]}
         ];
 
         const effortData = [
@@ -209,30 +270,42 @@
             const saveToBacklogBtn = document.getElementById('save-to-backlog');
             const navFramework = document.getElementById('nav-framework');
             const navBacklog = document.getElementById('nav-backlog');
+            const navImport = document.getElementById('nav-import');
             const frameworkView = document.getElementById('framework-view');
             const backlogView = document.getElementById('backlog-view');
+            const importView = document.getElementById('import-view');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
+            
+            let processedSheetItems = [];
             
             function switchView(view) {
+                frameworkView.classList.add('hidden');
+                backlogView.classList.add('hidden');
+                importView.classList.add('hidden');
+                
+                navFramework.classList.remove('nav-active', 'text-gray-800');
+                navBacklog.classList.remove('nav-active', 'text-gray-800');
+                navImport.classList.remove('nav-active', 'text-gray-800');
+                navFramework.classList.add('text-gray-500');
+                navBacklog.classList.add('text-gray-500');
+                navImport.classList.add('text-gray-500');
+
                 if (view === 'backlog') {
-                    frameworkView.classList.add('hidden');
                     backlogView.classList.remove('hidden');
-                    navFramework.classList.remove('nav-active', 'text-gray-800');
-                    navFramework.classList.add('text-gray-500');
                     navBacklog.classList.add('nav-active', 'text-gray-800');
-                    navBacklog.classList.remove('text-gray-500');
                     renderBacklog();
+                } else if (view === 'import') {
+                    importView.classList.remove('hidden');
+                    navImport.classList.add('nav-active', 'text-gray-800');
                 } else {
-                    backlogView.classList.add('hidden');
                     frameworkView.classList.remove('hidden');
-                    navBacklog.classList.remove('nav-active', 'text-gray-800');
-                    navBacklog.classList.add('text-gray-500');
                     navFramework.classList.add('nav-active', 'text-gray-800');
-                    navFramework.classList.remove('text-gray-500');
                 }
             }
             
             navFramework.addEventListener('click', () => switchView('framework'));
             navBacklog.addEventListener('click', () => switchView('backlog'));
+            navImport.addEventListener('click', () => switchView('import'));
 
             function displayCriterion(criterionId) {
                 const criterion = criteriaData.find(c => c.id === criterionId);
@@ -291,6 +364,7 @@
             
             saveToBacklogBtn.addEventListener('click', () => {
                 const featureName = document.getElementById('featureName').value.trim();
+                const requestingTeam = document.getElementById('requestingTeam').value;
                 if (!featureName) {
                     alert('Please enter a feature name.');
                     return;
@@ -301,6 +375,7 @@
                 const backlogItem = {
                     id: Date.now(),
                     name: featureName,
+                    team: requestingTeam,
                     valueScore: scores.valueScore,
                     effortScore: scores.effortScore,
                     effortRank: effortRank,
@@ -311,6 +386,7 @@
                 localStorage.setItem('featureBacklog', JSON.stringify(backlog));
                 
                 document.getElementById('featureName').value = '';
+                document.getElementById('requestingTeam').selectedIndex = 0;
                 alert(`"${featureName}" saved to backlog!`);
                 switchView('backlog');
             });
@@ -322,8 +398,10 @@
                 
                 if (backlog.length === 0) {
                     emptyMessage.classList.remove('hidden');
+                    exportCsvBtn.classList.add('hidden');
                 } else {
                     emptyMessage.classList.add('hidden');
+                    exportCsvBtn.classList.remove('hidden');
                     backlog.sort((a, b) => b.priorityScore - a.priorityScore);
                     backlog.forEach(item => {
                         const row = document.createElement('tr');
@@ -331,6 +409,7 @@
                         row.innerHTML = `
                             <td class="p-3 font-bold text-lg">${item.priorityScore.toFixed(2)}</td>
                             <td class="p-3">${item.name}</td>
+                            <td class="p-3">${item.team || 'N/A'}</td>
                             <td class="p-3">${item.valueScore}</td>
                             <td class="p-3">${item.effortRank} (${item.effortScore})</td>
                             <td class="p-3">
@@ -350,6 +429,174 @@
                     renderBacklog();
                 }
             });
+            
+            exportCsvBtn.addEventListener('click', () => {
+                if(backlog.length === 0) return;
+
+                const headers = ['Priority Score', 'Feature Name', 'Requesting Team', 'Value Score', 'Effort Score', 'Effort Rank'];
+                let csvContent = headers.join(",") + "\r\n";
+
+                const sortedBacklog = [...backlog].sort((a, b) => b.priorityScore - a.priorityScore);
+
+                sortedBacklog.forEach(item => {
+                    const name = `"${item.name.replace(/"/g, '""')}"`;
+                    const row = [item.priorityScore.toFixed(2), name, item.team, item.valueScore, item.effortScore, item.effortRank];
+                    csvContent += row.join(",") + "\r\n";
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "prioritized_backlog.csv");
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+
+            const processSheetBtn = document.getElementById('process-sheet-btn');
+            const sheetUrlInput = document.getElementById('google-sheet-url');
+            const importResultsDiv = document.getElementById('import-results');
+            const importStatusDiv = document.getElementById('import-status');
+            const previewDiv = document.getElementById('processed-items-preview');
+            const addAllBtn = document.getElementById('add-all-to-backlog-btn');
+
+            processSheetBtn.addEventListener('click', async () => {
+                const url = sheetUrlInput.value.trim();
+                if (!url) {
+                    alert('Please provide a Google Sheet URL.');
+                    return;
+                }
+
+                importResultsDiv.classList.remove('hidden');
+                importStatusDiv.className = 'p-4 rounded-md mb-4 bg-yellow-100 text-yellow-800';
+                importStatusDiv.textContent = 'Processing...';
+                addAllBtn.classList.add('hidden');
+                previewDiv.innerHTML = '';
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    const csvText = await response.text();
+                    parseAndProcessCSV(csvText);
+                } catch (error) {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-red-100 text-red-800';
+                    importStatusDiv.textContent = `Error fetching or processing sheet: ${error.message}. Please check the URL and ensure it's a published .csv link.`;
+                }
+            });
+
+            function parseAndProcessCSV(csvText) {
+                const lines = csvText.split(/\r\n|\n/);
+                const headers = lines[0].split(',').map(h => h.trim());
+                const requiredHeaders = ['Feature Name', 'Requesting Team', ...criteriaData.map(c => c.name), 'Effort Estimation'];
+                
+                const missingHeaders = requiredHeaders.filter(rh => !headers.includes(rh));
+                if (missingHeaders.length > 0) {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-red-100 text-red-800';
+                    importStatusDiv.innerHTML = `<strong>Error: Missing required headers in your Google Sheet.</strong><br>Missing: ${missingHeaders.join(', ')}`;
+                    return;
+                }
+
+                const headerIndexMap = {};
+                requiredHeaders.forEach(rh => headerIndexMap[rh] = headers.indexOf(rh));
+                
+                processedSheetItems = [];
+                let errors = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const data = lines[i].split(',').map(d => d.trim());
+
+                    try {
+                        const featureName = data[headerIndexMap['Feature Name']];
+                        const requestingTeam = data[headerIndexMap['Requesting Team']];
+                        if (!featureName) continue;
+
+                        let valueScore = 0;
+                        criteriaData.forEach(criterion => {
+                            const score = parseInt(data[headerIndexMap[criterion.name]]);
+                            if (isNaN(score) || score < 0 || score > 4) throw new Error(`Invalid score for "${criterion.name}"`);
+                            valueScore += score * criterion.weight;
+                        });
+
+                        const effortRank = data[headerIndexMap['Effort Estimation']].toUpperCase();
+                        const effort = effortData.find(e => e.rank === effortRank);
+                        if (!effort) throw new Error(`Invalid Effort Estimation value: "${effortRank}"`);
+                        const effortScore = effort.value;
+                        
+                        const priorityScore = effortScore > 0 ? (valueScore / effortScore) : 0;
+
+                        processedSheetItems.push({
+                            id: Date.now() + i,
+                            name: featureName,
+                            team: requestingTeam,
+                            valueScore,
+                            effortScore,
+                            effortRank,
+                            priorityScore
+                        });
+                    } catch (e) {
+                        errors.push(`Row ${i + 1}: ${e.message}`);
+                    }
+                }
+                
+                if (processedSheetItems.length > 0 && errors.length > 0) {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-yellow-100 text-yellow-800';
+                    importStatusDiv.textContent = `Processing complete. Successfully calculated scores for ${processedSheetItems.length} items and skipped ${errors.length} rows with invalid data.`;
+                    addAllBtn.textContent = `Add ${processedSheetItems.length} Valid Items to Backlog`;
+                    addAllBtn.classList.remove('hidden');
+                } else if (processedSheetItems.length > 0 && errors.length === 0) {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-green-100 text-green-800';
+                    importStatusDiv.textContent = `Success! All ${processedSheetItems.length} items were processed correctly.`;
+                    addAllBtn.textContent = `Add All ${processedSheetItems.length} Items to Backlog`;
+                    addAllBtn.classList.remove('hidden');
+                } else if (processedSheetItems.length === 0 && errors.length > 0) {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-red-100 text-red-800';
+                    importStatusDiv.textContent = `Processing failed. Found ${errors.length} rows with invalid data and no valid items to import. Please check the errors below.`;
+                    addAllBtn.classList.add('hidden');
+                } else {
+                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-yellow-100 text-yellow-800';
+                    importStatusDiv.textContent = 'No items found to process in the sheet.';
+                    addAllBtn.classList.add('hidden');
+                }
+                
+                let previewHtml = '';
+                if (processedSheetItems.length > 0) {
+                    previewHtml += '<h4 class="text-lg font-semibold mb-2 text-gray-800">Ready to Add:</h4>';
+                    previewHtml += '<table class="w-full text-left">';
+                    previewHtml += '<thead><tr class="border-b bg-gray-50"><th class="p-2 font-semibold">Score</th><th class="p-2 font-semibold">Feature Name</th><th class="p-2 font-semibold">Requesting Team</th></tr></thead><tbody>';
+                    processedSheetItems.sort((a,b) => b.priorityScore - a.priorityScore).forEach(item => {
+                        previewHtml += `<tr class="border-b"><td class="p-2 font-bold">${item.priorityScore.toFixed(2)}</td><td class="p-2">${item.name}</td><td class="p-2">${item.team}</td></tr>`;
+                    });
+                    previewHtml += '</tbody></table>';
+                }
+
+                if (errors.length > 0) {
+                    previewHtml += '<h4 class="text-lg font-semibold mt-4 text-red-700">Skipped Rows (Errors):</h4>';
+                    previewHtml += `<ul class="list-disc list-inside text-red-600">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`;
+                }
+
+                previewDiv.innerHTML = previewHtml;
+            }
+
+            addAllBtn.addEventListener('click', () => {
+                backlog = [...backlog, ...processedSheetItems];
+                localStorage.setItem('featureBacklog', JSON.stringify(backlog));
+                
+                alert(`${processedSheetItems.length} items have been added to the backlog.`);
+                
+                sheetUrlInput.value = '';
+                importResultsDiv.classList.add('hidden');
+                processedSheetItems = [];
+                
+                switchView('backlog');
+            });
+
 
             calculateScore();
 
