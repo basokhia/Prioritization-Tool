@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QFG SSE Team - Interactive Prioritization Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Subtle & Sophisticated -->
+    <!-- Application Structure Plan: The SPA is structured as a narrative journey to facilitate learning and application. It starts with a high-level hero section introducing the core formula. It then breaks down each component of the formula ("Value Score" and "Effort Score") into interactive, explorable sections. The "Value Score" section uses a tab-based interface to prevent overwhelming the user with all seven criteria at once. A radar chart visualizes a sample feature profile, making the multi-faceted nature of "value" tangible. The "Effort Score" section uses visually distinct cards. Finally, the SPA culminates in a hands-on, interactive calculator, allowing users to apply their knowledge immediately. This structure was chosen to transform a static guide into an engaging learning tool, moving from theory to practice in a single, seamless flow. -->
+    <!-- Visualization & Content Choices: 1. Core Formula (Inform): Presented with large typography and styled HTML/CSS for immediate impact. 2. Value Criteria (Organize/Inform): An interactive tab system built with JS and styled HTML. Goal is to allow focused exploration without scrolling. Interaction: User clicks a criterion to reveal its details. 3. Sample Feature Profile (Compare/Relationships): A Chart.js Radar Chart is used to visually represent how a feature scores across all 7 value dimensions simultaneously, offering a holistic view that a table cannot. 4. Effort T-Shirt Sizes (Inform/Compare): Styled HTML cards are used instead of a plain table to give each effort level more visual weight and distinction. 5. Interactive Calculator (Engage/Synthesize): An HTML form with JS listeners provides a hands-on tool for users to experiment with the scoring system, solidifying their understanding. All diagrams and layouts are built with Tailwind, HTML, and JS, with Chart.js for the single chart visualization. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F5;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .tab-active {
+            background-color: #607D8B;
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            background-color: #ECEFF1;
+            color: #374151;
+        }
+        .nav-active {
+            border-bottom: 2px solid #607D8B;
+            color: #607D8B;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800">Feature Prioritization Framework</h1>
+            <p class="text-lg text-gray-600 mt-2">An Interactive Tool by the QFG SSE Team</p>
+        </header>
+
+        <nav class="flex justify-center border-b mb-8">
+            <button id="nav-framework" class="py-4 px-6 text-lg nav-active">Framework</button>
+            <button id="nav-backlog" class="py-4 px-6 text-lg text-gray-500">Backlog</button>
+        </nav>
+
+        <main id="framework-view">
+            <section id="formula" class="bg-white rounded-lg shadow-md p-6 md:p-8 mb-12">
+                <h2 class="text-2xl font-bold text-center mb-6">The Core Concept: From Subjective to Objective</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    This framework provides a data-driven way to evaluate feature requests. We balance the strategic <span class="font-semibold">weighted value</span> a feature delivers against the effort required to build it, resulting in a clear, calculated priority score.
+                </p>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8 text-2xl font-semibold text-center">
+                    <div class="bg-blue-100 text-blue-800 p-6 rounded-lg shadow">Weighted Value Score</div>
+                    <div class="text-gray-500 text-4xl">/</div>
+                    <div class="bg-green-100 text-green-800 p-6 rounded-lg shadow">Effort Score</div>
+                    <div class="text-gray-500 text-4xl">=</div>
+                    <div class="bg-indigo-100 text-indigo-800 p-6 rounded-lg shadow">Priority Score</div>
+                </div>
+            </section>
+
+            <section id="value-score" class="mb-12">
+                 <h2 class="text-3xl font-bold text-center mb-2">Deep Dive: The Value Score</h2>
+                 <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    The Value Score is a <span class="font-semibold">weighted sum</span> of ratings across seven key criteria. Each criterion has a multiplier to reflect its strategic importance. Click on a criterion below to see its detailed scoring rubric and weight.
+                 </p>
+
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-1/3">
+                        <nav id="criteria-nav" class="flex flex-col space-y-2">
+                        </nav>
+                    </div>
+                    <div class="w-full md:w-2/3 bg-white rounded-lg shadow-md p-6 min-h-[300px]">
+                        <div id="criteria-content">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="value-visualization" class="bg-white rounded-lg shadow-md p-6 md:p-8 mb-12">
+                <h2 class="text-2xl font-bold text-center mb-2">Visualizing Value: A Sample Feature Profile</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    A radar chart helps visualize a feature's raw, unweighted scores across all dimensions. It provides a quick understanding of a feature's strengths before weighting is applied. The final priority score uses these ratings multiplied by their assigned weights.
+                </p>
+                <div class="chart-container">
+                    <canvas id="valueRadarChart"></canvas>
+                </div>
+            </section>
+
+            <section id="effort-score" class="mb-12">
+                <h2 class="text-3xl font-bold text-center mb-2">Deep Dive: The Effort Score</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    Effort is a high-level estimate of the work required from the SSE team. We use T-shirt sizes to keep estimates simple and relative. This score acts as the denominator in our formula, ensuring that large, costly features must provide significant value to be prioritized.
+                </p>
+                <div id="effort-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+            
+            <section id="calculator" class="bg-white rounded-lg shadow-md p-6 md:p-8">
+                <h2 class="text-3xl font-bold text-center mb-2">Interactive Prioritization Calculator</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    Put the framework into practice! Use this calculator to score a feature. Adjust the dropdowns for each criterion, then save it to the backlog to compare with other items.
+                </p>
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="w-full lg:w-1/2">
+                        <form id="calculator-form" class="space-y-4">
+                             <div>
+                                <label for="featureName" class="font-semibold text-gray-700">Feature Name</label>
+                                <input type="text" id="featureName" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Enter a descriptive name">
+                            </div>
+                        </form>
+                    </div>
+                     <div class="w-full lg:w-1/2 bg-gray-50 rounded-lg p-6 flex flex-col items-center justify-center">
+                        <h3 class="text-xl font-semibold mb-4">Calculated Score</h3>
+                        <div id="final-score" class="text-7xl font-bold text-[#607D8B]">0.00</div>
+                        <div class="text-center mt-4 text-gray-600">
+                            <span id="calc-value-score">Value: 0</span> / <span id="calc-effort-score">Effort: 1</span>
+                        </div>
+                        <button id="save-to-backlog" class="mt-6 bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
+                            Save to Backlog
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <main id="backlog-view" class="hidden">
+            <section id="backlog-table" class="bg-white rounded-lg shadow-md p-6 md:p-8">
+                <h2 class="text-3xl font-bold text-center mb-2">Feature Backlog</h2>
+                <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
+                    This is your prioritized list of features. The items with the highest score are at the top, representing the most valuable work for the effort involved.
+                </p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b bg-gray-50">
+                                <th class="p-3 font-semibold">Priority Score</th>
+                                <th class="p-3 font-semibold">Feature Name</th>
+                                <th class="p-3 font-semibold">Value</th>
+                                <th class="p-3 font-semibold">Effort</th>
+                                <th class="p-3 font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="backlog-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                 <div id="empty-backlog-message" class="text-center py-12 text-gray-500 hidden">
+                    <h3 class="text-xl font-semibold">Your backlog is empty.</h3>
+                    <p>Go to the "Framework" tab to score a feature and save it here.</p>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        const scoreOptions = [
+            { text: '0 - None / Unknown', value: 0 },
+            { text: '1 - Low', value: 1 },
+            { text: '2 - Medium', value: 2 },
+            { text: '3 - High', value: 3 },
+            { text: '4 - Very High', value: 4 },
+        ];
+
+        const criteriaData = [
+            { id: 'enterprise-okrs', name: 'Alignment to Enterprise OKRs', weight: 3, description: 'Measures how strongly the feature supports the highest-level strategic goals of QFG as a whole.', table: [['4 - Very High', 'Direct & Critical: Feature is essential to achieving a top-tier enterprise Key Result. (e.g., "Launch in the European market," "Achieve FedRAMP certification").'],['3 - High', 'Significant Contributor: Feature significantly accelerates progress on an enterprise KR. (e.g., "Reduce enterprise-wide cloud spend by 10%").'],['2 - Medium', 'Indirect Support: Feature supports a broad enterprise Objective but isn\'t tied to a specific KR. (e.g., "Improve operational efficiency").'],['1 - Low', 'Loosely Aligned: Feature has a tangential connection to enterprise goals. (e.g., "Minor UI improvements for an internal tool").'],['0 - None / Unknown', 'No discernible link to any documented enterprise OKR.']]},
+            { id: 'lob-okrs', name: 'Alignment to Journey (LOB) OKRs', weight: 2, description: 'Measures how well the feature supports the specific objectives of a Line of Business.', table: [['4 - Very High', 'Solves a Critical LOB Need: Directly enables a flagship LOB initiative. (e.g., "Enable real-time fraud alerts for the new mobile banking app").'],['3 - High', 'Improves Core LOB Metric: Directly impacts a key LOB metric like customer acquisition, retention, or satisfaction.'],['2 - Medium', 'Efficiency Gain: Improves an important internal LOB process.'],['1 - Low', 'Minor Enhancement: A \'nice-to-have\' feature for a specific LOB team.'],['0 - None / Unknown', 'Does not support any known LOB objectives.']]},
+            { id: 'team-okrs', name: 'Alignment to Team OKRs', weight: 1, description: 'Measures alignment with the goals of the specific team requesting the feature.', table: [['4 - Very High', 'Unblocks a Key Team Dependency: The requesting team is blocked and cannot meet a primary KR without this feature.'],['3 - High', 'Major Productivity Boost: Will save significant time or resources for the requesting team.'],['2 - Medium', 'Removes Friction: Addresses a known pain point or inefficiency in the team\'s daily workflow.'],['1 - Low', 'Quality of Life Improvement: A minor improvement that makes a task slightly easier for the team.'],['0 - None / Unknown', 'Not related to the requesting team\'s documented goals.']]},
+            { id: 'sse-okrs', name: 'Alignment to SSE Team\'s OKRs', weight: 1, description: 'Measures how the request supports the SSE team\'s own internal objectives (e.g., platform stability, reducing technical debt).', table: [['4 - Very High', 'Critical to SSE Mission: Directly contributes to a primary SSE Key Result. (e.g., "Reduce critical vulnerabilities by 90%").'],['3 - High', 'Reduces Tech Debt / Improves Service: Refactors a problematic service or improves core platform health.'],['2 - Medium', 'Improves Tooling/Automation: Enhances the SSE team\'s ability to deliver value.'],['1 - Low', 'Minor Internal Refinement: A small-scale improvement to an internal SSE process.'],['0 - None / Unknown', 'Does not align with the SSE team\'s current quarterly goals.']]},
+            { id: 'security', name: 'Security Requirement', weight: 2, description: 'Measures the feature\'s importance from a security risk perspective.', table: [['4 - Very High', 'Critical Risk Mitigation: Addresses a known, severe vulnerability (e.g., P0/P1) or is required to prevent an active threat.'],['3 - High', 'Proactive Defense: Hardens a critical system against a likely attack vector or implements a key security control.'],['2 - Medium', 'Security Best Practice: Implements defense-in-depth or improves security hygiene.'],['1 - Low', 'Minor Hardening: A small improvement that reduces the attack surface slightly.'],['0 - None / Unknown', 'No direct security impact.']]},
+            { id: 'compliance', name: 'Compliance Requirement', weight: 2, description: 'Measures the necessity of the feature to meet regulatory, legal, or industry standards.', table: [['4 - Very High', 'Mandatory for Operation: Required to avoid fines, sanctions, or loss of a critical certification (e.g., PCI-DSS, SOX, GDPR).'],['3 - High', 'Audit Finding Remediation: Addresses a specific, high-priority finding from an internal or external audit.'],['2 - Medium', 'Proactive Compliance: Helps prepare for upcoming regulations or simplifies future audits.'],['1 - Low', 'Best Practice Alignment: Aligns with an industry framework (e.g., NIST, ISO 27001) but is not strictly required.'],['0 - None / Unknown', 'No direct compliance impact.']]},
+            { id: 'benefit', name: 'Net $ Benefit', weight: 1, description: 'Measures the tangible, estimated financial impact of the feature.', table: [['4 - Very High', 'Major Financial Impact: Generates significant new revenue, enables millions in cost savings, or avoids substantial financial penalties.'],['3 - High', 'Measurable ROI: Delivers a clear and significant return on investment through revenue gain or cost reduction.'],['2 - Medium', 'Efficiency Savings: Creates measurable cost savings through time saved or process automation.'],['1 - Low', 'Minor Financial Impact: Small, indirect financial benefit that is difficult to quantify precisely.'],['0 - None / Unknown', 'No discernible financial impact, or the benefit is purely qualitative.']]}
+        ];
+
+        const effortData = [
+            { rank: 'Y', days: 'Up to 5 days', value: 1, color: 'bg-teal-100', textColor: 'text-teal-800' },
+            { rank: 'XS', days: '6 - 15 days', value: 2, color: 'bg-cyan-100', textColor: 'text-cyan-800' },
+            { rank: 'S', days: '16 - 35 days', value: 3, color: 'bg-sky-100', textColor: 'text-sky-800' },
+            { rank: 'M', days: '36 - 90 days', value: 5, color: 'bg-amber-100', textColor: 'text-amber-800' },
+            { rank: 'L', days: '91 - 150 days', value: 8, color: 'bg-orange-100', textColor: 'text-orange-800' },
+            { rank: 'XL', days: 'Over 150 days', value: 13, color: 'bg-red-100', textColor: 'text-red-800' }
+        ];
+        
+        let backlog = JSON.parse(localStorage.getItem('featureBacklog')) || [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const criteriaNav = document.getElementById('criteria-nav');
+            const criteriaContent = document.getElementById('criteria-content');
+            const calculatorForm = document.getElementById('calculator-form');
+            const saveToBacklogBtn = document.getElementById('save-to-backlog');
+            const navFramework = document.getElementById('nav-framework');
+            const navBacklog = document.getElementById('nav-backlog');
+            const frameworkView = document.getElementById('framework-view');
+            const backlogView = document.getElementById('backlog-view');
+            
+            function switchView(view) {
+                if (view === 'backlog') {
+                    frameworkView.classList.add('hidden');
+                    backlogView.classList.remove('hidden');
+                    navFramework.classList.remove('nav-active', 'text-gray-800');
+                    navFramework.classList.add('text-gray-500');
+                    navBacklog.classList.add('nav-active', 'text-gray-800');
+                    navBacklog.classList.remove('text-gray-500');
+                    renderBacklog();
+                } else {
+                    backlogView.classList.add('hidden');
+                    frameworkView.classList.remove('hidden');
+                    navBacklog.classList.remove('nav-active', 'text-gray-800');
+                    navBacklog.classList.add('text-gray-500');
+                    navFramework.classList.add('nav-active', 'text-gray-800');
+                    navFramework.classList.remove('text-gray-500');
+                }
+            }
+            
+            navFramework.addEventListener('click', () => switchView('framework'));
+            navBacklog.addEventListener('click', () => switchView('backlog'));
+
+            function displayCriterion(criterionId) {
+                const criterion = criteriaData.find(c => c.id === criterionId);
+                if (!criterion) return;
+                let tableHtml = `<h3 class="text-xl font-bold mb-2">${criterion.name} (x${criterion.weight} weight)</h3><p class="text-gray-600 mb-4">${criterion.description}</p><div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="border-b bg-gray-50"><th class="p-2 font-semibold">Rank</th><th class="p-2 font-semibold">Definition & Examples</th></tr></thead><tbody>`;
+                criterion.table.forEach(row => { tableHtml += `<tr class="border-b"><td class="p-2 font-medium align-top">${row[0]}</td><td class="p-2 align-top">${row[1]}</td></tr>`; });
+                tableHtml += `</tbody></table></div>`;
+                criteriaContent.innerHTML = tableHtml;
+                document.querySelectorAll('#criteria-nav button').forEach(btn => {
+                    if (btn.dataset.id === criterionId) { btn.classList.remove('tab-inactive'); btn.classList.add('tab-active'); } else { btn.classList.remove('tab-active'); btn.classList.add('tab-inactive'); }
+                });
+            }
+
+            criteriaData.forEach((criterion, index) => {
+                const button = document.createElement('button');
+                button.textContent = `${criterion.name} (x${criterion.weight})`;
+                button.dataset.id = criterion.id;
+                button.className = `w-full text-left p-3 rounded-md transition-colors duration-200 ${index === 0 ? 'tab-active' : 'tab-inactive'}`;
+                button.onclick = () => displayCriterion(criterion.id);
+                criteriaNav.appendChild(button);
+            });
+            displayCriterion(criteriaData[0].id);
+
+            const effortCardsContainer = document.getElementById('effort-cards');
+            effortData.forEach(effort => {
+                effortCardsContainer.innerHTML += `<div class="rounded-lg shadow-md p-6 ${effort.color} ${effort.textColor}"><div class="flex justify-between items-center"><span class="text-3xl font-bold">${effort.rank}</span><span class="text-lg font-semibold">${effort.days}</span></div></div>`;
+            });
+
+            function generateSelect(id, label, weight) {
+                let selectHtml = `<div><label for="${id}" class="font-semibold text-gray-700">${label} (x${weight})</label><select id="${id}" name="${id}" class="w-full mt-1 p-2 border border-gray-300 rounded-md">`;
+                scoreOptions.forEach(opt => { selectHtml += `<option value="${opt.value}">${opt.text}</option>`; });
+                selectHtml += `</select></div>`;
+                return selectHtml;
+            }
+
+            criteriaData.forEach(criterion => { calculatorForm.innerHTML += generateSelect(criterion.id, criterion.name, criterion.weight); });
+            
+            let effortSelectHtml = `<div><label for="effort" class="font-semibold text-gray-700">Effort Estimation</label><select id="effort" name="effort" class="w-full mt-1 p-2 border border-gray-300 rounded-md">`;
+            effortData.forEach(effort => { effortSelectHtml += `<option value="${effort.value}">${effort.rank} (${effort.days})</option>`; });
+            effortSelectHtml += `</select></div>`;
+            calculatorForm.innerHTML += effortSelectHtml;
+
+            function calculateScore() {
+                let valueScore = 0;
+                criteriaData.forEach(criterion => { valueScore += parseInt(document.getElementById(criterion.id).value) * criterion.weight; });
+                const effortScore = parseInt(document.getElementById('effort').value);
+                const finalScore = effortScore > 0 ? (valueScore / effortScore) : 0;
+                document.getElementById('final-score').textContent = finalScore.toFixed(2);
+                document.getElementById('calc-value-score').textContent = `Value: ${valueScore}`;
+                document.getElementById('calc-effort-score').textContent = `Effort: ${effortScore}`;
+                return { valueScore, effortScore, finalScore };
+            }
+
+            calculatorForm.addEventListener('change', calculateScore);
+            calculatorForm.addEventListener('keyup', calculateScore);
+            
+            saveToBacklogBtn.addEventListener('click', () => {
+                const featureName = document.getElementById('featureName').value.trim();
+                if (!featureName) {
+                    alert('Please enter a feature name.');
+                    return;
+                }
+                const scores = calculateScore();
+                const effortRank = effortData.find(e => e.value === scores.effortScore).rank;
+                
+                const backlogItem = {
+                    id: Date.now(),
+                    name: featureName,
+                    valueScore: scores.valueScore,
+                    effortScore: scores.effortScore,
+                    effortRank: effortRank,
+                    priorityScore: scores.finalScore
+                };
+                
+                backlog.push(backlogItem);
+                localStorage.setItem('featureBacklog', JSON.stringify(backlog));
+                
+                document.getElementById('featureName').value = '';
+                alert(`"${featureName}" saved to backlog!`);
+                switchView('backlog');
+            });
+            
+            function renderBacklog() {
+                const tableBody = document.getElementById('backlog-table-body');
+                const emptyMessage = document.getElementById('empty-backlog-message');
+                tableBody.innerHTML = '';
+                
+                if (backlog.length === 0) {
+                    emptyMessage.classList.remove('hidden');
+                } else {
+                    emptyMessage.classList.add('hidden');
+                    backlog.sort((a, b) => b.priorityScore - a.priorityScore);
+                    backlog.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.className = 'border-b';
+                        row.innerHTML = `
+                            <td class="p-3 font-bold text-lg">${item.priorityScore.toFixed(2)}</td>
+                            <td class="p-3">${item.name}</td>
+                            <td class="p-3">${item.valueScore}</td>
+                            <td class="p-3">${item.effortRank} (${item.effortScore})</td>
+                            <td class="p-3">
+                                <button data-id="${item.id}" class="remove-btn text-red-500 hover:text-red-700 font-semibold">Remove</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            }
+
+            document.getElementById('backlog-table-body').addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('remove-btn')) {
+                    const itemId = parseInt(e.target.dataset.id);
+                    backlog = backlog.filter(item => item.id !== itemId);
+                    localStorage.setItem('featureBacklog', JSON.stringify(backlog));
+                    renderBacklog();
+                }
+            });
+
+            calculateScore();
+
+            function wrapLabel(label) {
+                const maxLength = 16;
+                if (label.length <= maxLength) return label;
+                const words = label.split(' ');
+                let lines = [];
+                let currentLine = '';
+                words.forEach(word => { if ((currentLine + word).length > maxLength) { lines.push(currentLine.trim()); currentLine = ''; } currentLine += word + ' '; });
+                lines.push(currentLine.trim());
+                return lines;
+            }
+
+            const radarCtx = document.getElementById('valueRadarChart').getContext('2d');
+            const radarLabels = criteriaData.map(c => wrapLabel(c.name));
+            new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: radarLabels,
+                    datasets: [{
+                        label: 'Sample Feature: "Improve Security Dashboard"',
+                        data: [2, 3, 1, 3, 4, 2, 1],
+                        backgroundColor: 'rgba(96, 125, 139, 0.2)',
+                        borderColor: 'rgba(96, 125, 139, 1)',
+                        pointBackgroundColor: 'rgba(96, 125, 139, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(96, 125, 139, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: { r: { angleLines: { color: '#E0E0E0' }, grid: { color: '#E0E0E0' }, pointLabels: { font: { size: 12 }, color: '#455A64' }, ticks: { backdropColor: '#F5F5F5', color: '#607D8B', stepSize: 1 }, suggestedMin: 0, suggestedMax: 4 } },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: '#455A64', font: { size: 14, weight: '500' } } },
+                        tooltip: { callbacks: { title: function(tooltipItems) { const item = tooltipItems[0]; let label = item.chart.data.labels[item.dataIndex]; if (Array.isArray(label)) { return label.join(' '); } else { return label; } } } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
