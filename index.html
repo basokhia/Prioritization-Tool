@@ -148,36 +148,35 @@
             <section id="import-section" class="bg-white rounded-lg shadow-md p-6 md:p-8">
                 <h2 class="text-3xl font-bold text-center mb-2">Import from Google Sheet</h2>
                 <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
-                    Bulk-add features by linking a public Google Sheet. The tool will calculate scores for all rows and allow you to add them to your backlog in one click.
+                    Bulk-add features by pasting your data directly from a published Google Sheet.
                 </p>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
                     <h3 class="text-xl font-semibold mb-4">Instructions</h3>
                     <ol class="list-decimal list-inside space-y-2 text-gray-700">
-                        <li>Create a Google Sheet with the exact column headers below (the order does not matter).</li>
-                        <li>Fill in your feature data. Values for criteria must be a number from 0-4. Values for effort must be a T-shirt size (Y, XS, S, M, L, XL).</li>
+                        <li>Open your Google Sheet.</li>
+                        <li>Ensure it has the required column headers (see below).</li>
                         <li>Click <strong>File > Share > Publish to the web</strong>.</li>
-                        <li>In the dialog, select "Entire Document" and "Comma-separated values (.csv)". Click "Publish".</li>
-                        <li>Copy the generated link and paste it into the input field below.</li>
+                        <li>Select "Entire Document" and **"Comma-separated values (.csv)"**. Click "Publish".</li>
+                        <li>Open the generated link in a new browser tab.</li>
+                        <li>Select all the text (`Ctrl+A` or `Cmd+A`) and copy it (`Ctrl+C` or `Cmd+C`).</li>
+                        <li>Paste the copied text into the text box below and click "Process Data".</li>
                     </ol>
                     <div id="required-headers-container" class="mt-4 p-3 bg-gray-200 rounded font-mono text-sm text-gray-800 overflow-x-auto">
                     </div>
                 </div>
 
-                <div class="flex flex-col md:flex-row gap-4 items-center">
-                    <input type="url" id="google-sheet-url" class="flex-grow w-full p-2 border border-gray-300 rounded-md" placeholder="Paste your published Google Sheet .csv link here">
-                    <button id="process-sheet-btn" class="w-full md:w-auto bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
-                        Process Sheet
+                <div>
+                    <label for="manual-csv-input" class="block font-semibold text-gray-700 mb-2">Paste CSV Data Here:</label>
+                    <textarea id="manual-csv-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Paste the text from your published .csv file here."></textarea>
+                    <button id="process-sheet-btn" class="w-full mt-4 bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
+                        Process Data
                     </button>
                 </div>
 
                 <div id="import-results" class="mt-8 hidden">
                     <h3 class="text-xl font-semibold mb-4">Processing Results</h3>
                     <div id="import-status" class="p-4 rounded-md mb-4"></div>
-                    <div id="manual-csv-input-container" class="hidden mt-4">
-                        <label for="manual-csv-input" class="block font-semibold text-gray-700 mb-2">Manual CSV Input:</label>
-                        <textarea id="manual-csv-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="If automatic fetch failed, open your .csv link in a new tab, copy the text, and paste it here. Then click 'Process Sheet' again."></textarea>
-                    </div>
                     <div id="processed-items-preview" class="max-h-96 overflow-y-auto border rounded-lg p-4"></div>
                     <div class="text-center mt-6">
                         <button id="add-all-to-backlog-btn" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors text-lg">
@@ -478,20 +477,16 @@
             });
 
             const processSheetBtn = document.getElementById('process-sheet-btn');
-            const sheetUrlInput = document.getElementById('google-sheet-url');
+            const manualCsvInput = document.getElementById('manual-csv-input');
             const importResultsDiv = document.getElementById('import-results');
             const importStatusDiv = document.getElementById('import-status');
-            const manualCsvContainer = document.getElementById('manual-csv-input-container');
-            const manualCsvInput = document.getElementById('manual-csv-input');
             const previewDiv = document.getElementById('processed-items-preview');
             const addAllBtn = document.getElementById('add-all-to-backlog-btn');
 
-            processSheetBtn.addEventListener('click', async () => {
-                const url = sheetUrlInput.value.trim();
+            processSheetBtn.addEventListener('click', () => {
                 const manualData = manualCsvInput.value.trim();
-
-                if (!url && !manualData) {
-                    alert('Please provide a Google Sheet URL or paste CSV data directly.');
+                if (!manualData) {
+                    alert('Please paste CSV data into the text box.');
                     return;
                 }
                 
@@ -500,26 +495,8 @@
                 importStatusDiv.textContent = 'Processing...';
                 addAllBtn.classList.add('hidden');
                 previewDiv.innerHTML = '';
-                manualCsvContainer.classList.add('hidden');
-
-                if (manualData) {
-                    parseAndProcessCSV(manualData);
-                    return;
-                }
                 
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const fetchUrl = `${proxyUrl}${encodeURIComponent(url)}`;
-                
-                try {
-                    const response = await fetch(fetchUrl);
-                    if (!response.ok) { throw new Error(`Network response was not ok: ${response.statusText}`); }
-                    const csvText = await response.text();
-                    parseAndProcessCSV(csvText);
-                } catch (error) {
-                    importStatusDiv.className = 'p-4 rounded-md mb-4 bg-red-100 text-red-800';
-                    importStatusDiv.textContent = `Automatic fetch failed: ${error.message}. This can be due to network issues or CORS policies. Please try the manual copy-paste method below.`;
-                    manualCsvContainer.classList.remove('hidden');
-                }
+                parseAndProcessCSV(manualData);
             });
 
             function parseAndProcessCSV(csvText) {
@@ -621,7 +598,7 @@
                 backlog = [...backlog, ...processedSheetItems];
                 localStorage.setItem('featureBacklog', JSON.stringify(backlog));
                 alert(`${processedSheetItems.length} items have been added to the backlog.`);
-                sheetUrlInput.value = '';
+                manualCsvInput.value = '';
                 importResultsDiv.classList.add('hidden');
                 processedSheetItems = [];
                 switchView('backlog');
