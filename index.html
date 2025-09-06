@@ -174,6 +174,10 @@
                 <div id="import-results" class="mt-8 hidden">
                     <h3 class="text-xl font-semibold mb-4">Processing Results</h3>
                     <div id="import-status" class="p-4 rounded-md mb-4"></div>
+                    <div id="manual-csv-input-container" class="hidden mt-4">
+                        <label for="manual-csv-input" class="block font-semibold text-gray-700 mb-2">Manual CSV Input:</label>
+                        <textarea id="manual-csv-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="If automatic fetch failed, open your .csv link in a new tab, copy the text, and paste it here. Then click 'Process Sheet' again."></textarea>
+                    </div>
                     <div id="processed-items-preview" class="max-h-96 overflow-y-auto border rounded-lg p-4"></div>
                     <div class="text-center mt-6">
                         <button id="add-all-to-backlog-btn" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors text-lg">
@@ -477,34 +481,44 @@
             const sheetUrlInput = document.getElementById('google-sheet-url');
             const importResultsDiv = document.getElementById('import-results');
             const importStatusDiv = document.getElementById('import-status');
+            const manualCsvContainer = document.getElementById('manual-csv-input-container');
+            const manualCsvInput = document.getElementById('manual-csv-input');
             const previewDiv = document.getElementById('processed-items-preview');
             const addAllBtn = document.getElementById('add-all-to-backlog-btn');
 
             processSheetBtn.addEventListener('click', async () => {
                 const url = sheetUrlInput.value.trim();
-                if (!url) {
-                    alert('Please provide a Google Sheet URL.');
+                const manualData = manualCsvInput.value.trim();
+
+                if (!url && !manualData) {
+                    alert('Please provide a Google Sheet URL or paste CSV data directly.');
                     return;
                 }
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const fetchUrl = `${proxyUrl}${encodeURIComponent(url)}`;
-
+                
                 importResultsDiv.classList.remove('hidden');
                 importStatusDiv.className = 'p-4 rounded-md mb-4 bg-yellow-100 text-yellow-800';
                 importStatusDiv.textContent = 'Processing...';
                 addAllBtn.classList.add('hidden');
                 previewDiv.innerHTML = '';
+                manualCsvContainer.classList.add('hidden');
+
+                if (manualData) {
+                    parseAndProcessCSV(manualData);
+                    return;
+                }
+                
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const fetchUrl = `${proxyUrl}${encodeURIComponent(url)}`;
                 
                 try {
                     const response = await fetch(fetchUrl);
-                    if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
-                    }
+                    if (!response.ok) { throw new Error(`Network response was not ok: ${response.statusText}`); }
                     const csvText = await response.text();
                     parseAndProcessCSV(csvText);
                 } catch (error) {
                     importStatusDiv.className = 'p-4 rounded-md mb-4 bg-red-100 text-red-800';
-                    importStatusDiv.textContent = `Error fetching or processing sheet: ${error.message}. Please check the URL and ensure it's a published .csv link.`;
+                    importStatusDiv.textContent = `Automatic fetch failed: ${error.message}. This can be due to network issues or CORS policies. Please try the manual copy-paste method below.`;
+                    manualCsvContainer.classList.remove('hidden');
                 }
             });
 
