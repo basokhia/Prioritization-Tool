@@ -148,36 +148,37 @@
             <section id="import-section" class="bg-white rounded-lg shadow-md p-6 md:p-8">
                 <h2 class="text-3xl font-bold text-center mb-2">Import from Google Sheet</h2>
                 <p class="text-center max-w-3xl mx-auto text-gray-600 mb-8">
-                    Bulk-add features by linking a public Google Sheet. The tool will calculate scores for all rows and allow you to add them to your backlog in one click.
+                    Bulk-add features by linking a public Google Sheet. If the automatic fetch fails, you can paste your data manually.
                 </p>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-8">
                     <h3 class="text-xl font-semibold mb-4">Instructions</h3>
                     <ol class="list-decimal list-inside space-y-2 text-gray-700">
-                        <li>Create a Google Sheet with the exact column headers below (the order does not matter).</li>
+                        <li>Create a Google Sheet with the required column headers (see below).</li>
                         <li>Fill in your feature data. Values for criteria must be a number from 0-4. Values for effort must be a T-shirt size (Y, XS, S, M, L, XL).</li>
                         <li>Click <strong>File > Share > Publish to the web</strong>.</li>
-                        <li>In the dialog, select "Entire Document" and "Comma-separated values (.csv)". Click "Publish".</li>
-                        <li>Copy the generated link and paste it into the input field below.</li>
+                        <li>Select "Entire Document" and **"Comma-separated values (.csv)"**. Click "Publish".</li>
+                        <li>Copy the generated link and paste it into the URL field below.</li>
                     </ol>
                     <div id="required-headers-container" class="mt-4 p-3 bg-gray-200 rounded font-mono text-sm text-gray-800 overflow-x-auto">
                     </div>
                 </div>
 
-                <div class="flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex flex-col md:flex-row gap-4 items-center mb-4">
                     <input type="url" id="google-sheet-url" class="flex-grow w-full p-2 border border-gray-300 rounded-md" placeholder="Paste your published Google Sheet .csv link here">
-                    <button id="process-sheet-btn" class="w-full md:w-auto bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
-                        Process Sheet
-                    </button>
                 </div>
+                 <div id="manual-csv-input-container" class="hidden mt-4">
+                    <label for="manual-csv-input" class="block font-semibold text-gray-700 mb-2">Manual CSV Input:</label>
+                    <textarea id="manual-csv-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="If automatic fetch failed, open your .csv link in a new tab, copy the text, and paste it here. Then click 'Process Sheet' again."></textarea>
+                </div>
+                <button id="process-sheet-btn" class="w-full mt-4 bg-[#607D8B] text-white font-bold py-2 px-6 rounded-lg hover:bg-[#546E7A] transition-colors">
+                    Process Sheet
+                </button>
+
 
                 <div id="import-results" class="mt-8 hidden">
                     <h3 class="text-xl font-semibold mb-4">Processing Results</h3>
                     <div id="import-status" class="p-4 rounded-md mb-4"></div>
-                    <div id="manual-csv-input-container" class="hidden mt-4">
-                        <label for="manual-csv-input" class="block font-semibold text-gray-700 mb-2">Manual CSV Input:</label>
-                        <textarea id="manual-csv-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="If automatic fetch failed, open your .csv link in a new tab, copy the text, and paste it here. Then click 'Process Sheet' again."></textarea>
-                    </div>
                     <div id="processed-items-preview" class="max-h-96 overflow-y-auto border rounded-lg p-4"></div>
                     <div class="text-center mt-6">
                         <button id="add-all-to-backlog-btn" class="hidden bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors text-lg">
@@ -201,12 +202,11 @@
         ];
 
         const criteriaData = [
-            { id: 'lob-okrs', name: 'Alignment to Journey or LOB OKRs', weight: 3 },
-            { id: 'team-okrs', name: 'Alignment to Team OKRs', weight: 2 },
-            { id: 'sse-okrs', name: 'Alignment to SSE OKRs', weight: 1 },
+            { id: 'team-okrs', name: 'Alignment to OKRs', weight: 2 },
+            { id: 'sse-okrs', name: 'Alignment to SSE OKRs', weight: 2 },
             { id: 'security', name: 'Security Alignment', weight: 2 },
-            { id: 'compliance', name: 'Compliance Alignment', weight: 2 },
-            { id: 'urgency', name: 'Urgency', weight: 2 },
+            { id: 'compliance', name: 'Regulatory Alignment (compliance, privacy & legal)', weight: 3 },
+            { id: 'urgency', name: 'Urgency', weight: 1 },
             { id: 'revenue-impact', name: 'Expected Revenue Impact', weight: 2 },
             { id: 'opex-savings', name: 'Projected OPEX Savings', weight: 2 },
             { id: 'cx-impact', name: 'Impact to Customer Experience', weight: 2 },
@@ -507,8 +507,8 @@
                     return;
                 }
 
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const fetchUrl = `${proxyUrl}${url}`;
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const fetchUrl = `${proxyUrl}${encodeURIComponent(url)}`;
                 
                 try {
                     const response = await fetch(fetchUrl);
